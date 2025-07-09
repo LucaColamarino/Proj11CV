@@ -40,10 +40,10 @@ class CityscapesDataset(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.files[idx])
         label_path = os.path.join(self.label_dir, self.files[idx])
-
-        image = Image.open(img_path).convert('RGB').resize(self.resize, Image.BILINEAR)
-        label_rgb = Image.open(label_path).resize(self.resize, Image.NEAREST)
+        image = Image.open(img_path).convert('RGB').resize((self.resize[1], self.resize[0]), Image.BILINEAR)
+        label_rgb = Image.open(label_path).resize((self.resize[1], self.resize[0]), Image.NEAREST)
         label_id = rgb_to_id(np.array(label_rgb))
+
 
         if self.transform:
             image = self.transform(image)
