@@ -1,2 +1,4 @@
 /datasets/
 /deeplabv3_cityscapes.pth
+/deeplabv3_cityscapes_fine.pth
+/OLD/
