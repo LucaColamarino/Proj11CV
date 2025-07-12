@@ -18,37 +18,37 @@ COLORS = np.array([
     (128,  64,128), (244,  35,232), ( 70,  70, 70), (102,102,156), (190,153,153),
     (153,153,153), (250,170, 30), (220,220,  0), (107,142, 35), (152,251,152),
     ( 70,130,180), (220, 20, 60), (255,  0,  0), (  0,  0,142), (  0,  0, 70),
-    (  0, 60,100), (  0, 80,100), (  0,  0,230), (119, 11, 32)
+    (  0, 60,100), (  0, 80,100), (  0,  0,230), (119, 11, 32), (255, 255, 0)
 ], dtype=np.uint8)
 
-
-def rgb_to_id(mask_rgb, palette2id=PALETTE2ID, default=255):
-    h, w, _ = mask_rgb.shape
-    mask_id = np.full((h, w), default, dtype=np.uint8)
-    for rgb, cls_id in palette2id.items():
-        mask_id[(mask_rgb == rgb).all(axis=-1)] = cls_id
-    return mask_id
-
-class CityscapesDataset(Dataset):
-    def __init__(self, root, split='train', transform=None, resize=(256, 512)):
-        self.img_dir = os.path.join(root, split, 'img')
-        self.label_dir = os.path.join(root, split, 'label')
-        self.files = sorted(os.listdir(self.img_dir))
+# 🗺️ Dataset ufficiale con gtFine
+class CityscapesFineDataset(Dataset):
+    def __init__(self, root, split='train', transform=None, resize=(256,512)):
+        self.img_dir = os.path.join(root, 'leftImg8bit', split)
+        self.label_dir = os.path.join(root, 'gtFine', split)
         self.transform = transform
         self.resize = resize
+        self.images = []
+        self.labels = []
 
-    def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, self.files[idx])
-        label_path = os.path.join(self.label_dir, self.files[idx])
-        image = Image.open(img_path).convert('RGB').resize((self.resize[1], self.resize[0]), Image.BILINEAR)
-        label_rgb = Image.open(label_path).resize((self.resize[1], self.resize[0]), Image.NEAREST)
-        label_id = rgb_to_id(np.array(label_rgb))
-
-
-        if self.transform:
-            image = self.transform(image)
-
-        return image, torch.from_numpy(label_id).long()
+        for city in os.listdir(self.img_dir):
+            for fn in os.listdir(os.path.join(self.img_dir, city)):
+                if fn.endswith('_leftImg8bit.png'):
+                    self.images.append(os.path.join(self.img_dir, city, fn))
+                    self.labels.append(
+                        os.path.join(self.label_dir, city,
+                                     fn.replace('_leftImg8bit.png', '_gtFine_labelTrainIds.png'))
+                    )
 
     def __len__(self):
-        return len(self.files)
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        img = Image.open(self.images[idx]).convert('RGB')
+        lbl = Image.open(self.labels[idx])
+        img = img.resize((self.resize[1], self.resize[0]), Image.BILINEAR)
+        lbl = lbl.resize((self.resize[1], self.resize[0]), Image.NEAREST)
+        if self.transform:  
+            img = self.transform(img)
+        lbl = torch.from_numpy(np.array(lbl)).long()
+        return img, lbl
