@@ -2,3 +2,4 @@
 /deeplabv3_cityscapes.pth
 *.pth
 *.pyc
+/OLD/
