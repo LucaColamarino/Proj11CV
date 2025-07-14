@@ -3,9 +3,8 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 import numpy as np
-from torchvision import transforms # Import transforms here for functional transforms
+from torchvision import transforms
 
-# --- Your existing PALETTE2ID ---
 PALETTE2ID = {
     (128,  64, 128): 0, (244,  35, 232): 1, ( 70,  70,  70): 2,
     (102, 102, 156): 3, (190, 153, 153): 4, (153, 153, 153): 5,
@@ -16,7 +15,6 @@ PALETTE2ID = {
     (119,  11,  32): 18, (255,   0, 255): 19 # Bright Magenta for UNKNOWN_OBSTACLE_ID
 }
 
-# --- UPDATED COLORS array (added magenta at index 19) ---
 COLORS = np.array([
     (128,  64,128), (244,  35,232), ( 70,  70, 70), (102,102,156), (190,153,153),
     (153,153,153), (250,170, 30), (220,220,  0), (107,142, 35), (152,251,152),
@@ -25,7 +23,7 @@ COLORS = np.array([
     (255,   0, 255) # Bright Magenta for UNKNOWN_OBSTACLE_ID (index 19)
 ], dtype=np.uint8)
 
-# 🗺️ Dataset ufficiale con gtFine
+# Official Dataset with gtFine
 class CityscapesFineDataset(Dataset):
     def __init__(self, root, split='train', transform=None, resize=(256,512)):
         self.img_dir = os.path.join(root, 'leftImg8bit', split)
@@ -56,7 +54,8 @@ class CityscapesFineDataset(Dataset):
             img = img.resize((self.resize[1], self.resize[0]), Image.BILINEAR)
             lbl = lbl.resize((self.resize[1], self.resize[0]), Image.NEAREST)
 
-            # --- NEW: Data Augmentations (applied to both image and label) ---
+            # Data Augmentations (applied to both image and label)
+            
             # Random Horizontal Flip
             if torch.rand(1) < 0.5: # 50% probability
                 img = transforms.functional.hflip(img)
@@ -69,8 +68,6 @@ class CityscapesFineDataset(Dataset):
                 img = transforms.functional.rotate(img, angle, fill=(0,0,0))
                 lbl = transforms.functional.rotate(lbl, angle, fill=255, interpolation=Image.NEAREST)
 
-            # --- END NEW AUGMENTATIONS ---
-
             # Convert label to tensor (numpy array first, then torch tensor)
             # Ensure label is long type as it contains class IDs
             lbl = torch.from_numpy(np.array(lbl)).long()
@@ -81,6 +78,5 @@ class CityscapesFineDataset(Dataset):
             return img, lbl
         except Exception as e:
             print(f"Error loading image or label at index {idx}: {self.images[idx]}, {self.labels[idx]} - {e}")
-            # Potentially return a dummy item or raise an error depending on desired behavior
-            # For now, let's re-raise to ensure the crash is caught if it's not due to content
+            # If an error occurs, we can either skip this sample or raise an exception
             raise
