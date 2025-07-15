@@ -81,28 +81,28 @@ class CityscapesFineDataset(Dataset):
             # If an error occurs, we can either skip this sample or raise an exception
             raise
 
-    class CityscapesPTDataset(Dataset):
-        def __init__(self, root, split='train', device=None):
-            self.root = root
-            self.split = split
-            self.image_dir = os.path.join(root, 'images', split)
-            self.mask_dir = os.path.join(root, 'masks', split)
+class CityscapesPTDataset(Dataset):
+    def __init__(self, root, split='train', device=None):
+        self.root = root
+        self.split = split
+        self.image_dir = os.path.join(root, 'images', split)
+        self.mask_dir = os.path.join(root, 'masks', split)
 
-            self.files = sorted([f for f in os.listdir(self.image_dir) if f.endswith('.pt')])
-            self.device = device  # 'cuda' o None
+        self.files = sorted([f for f in os.listdir(self.image_dir) if f.endswith('.pt')])
+        self.device = device  # 'cuda' o None
 
-        def __len__(self):
-            return len(self.files)
+    def __len__(self):
+        return len(self.files)
 
-        def __getitem__(self, idx):
-            image_path = os.path.join(self.image_dir, self.files[idx])
-            mask_path = os.path.join(self.mask_dir, self.files[idx])
+    def __getitem__(self, idx):
+        image_path = os.path.join(self.image_dir, self.files[idx])
+        mask_path = os.path.join(self.mask_dir, self.files[idx])
 
-            image = torch.load(image_path).float()       # [C, H, W], float32
-            mask = torch.load(mask_path).long()          # [H, W], long
+        image = torch.load(image_path).float()       # [C, H, W], float32
+        mask = torch.load(mask_path).long()          # [H, W], long
 
-            if self.device:
-                image = image.to(self.device, non_blocking=True)
-                mask = mask.to(self.device, non_blocking=True)
+        if self.device:
+            image = image.to(self.device, non_blocking=True)
+            mask = mask.to(self.device, non_blocking=True)
 
-            return image, mask
+        return image, mask
