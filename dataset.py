@@ -15,6 +15,25 @@ PALETTE2ID = {
     (119,  11,  32): 18
 }
 
+# Mapping 19 classi Cityscapes -> 7 macro-classi
+CITYSCAPES_19_TO_7 = {
+    0: 0,   # road → road
+    1: 1, 2: 1, 3: 1,   # sidewalk, parking, rail track → flat(no road)
+    4: 2, 5: 2,         # person, rider → human
+    6: 3, 7: 3, 8: 3, 9: 3, 10: 3, 11: 3, 12: 3, 13: 3,  # vehicle group
+    14: 4, 15: 4, 16: 4, 17: 4,       # construction group
+    18: 5,  # pole → object
+    # Vegetation, terrain, sky (macro background)
+    # Aggiungi eventuali ID extra se li hai nel tuo PALETTE2ID (es. vegetation, terrain, sky)
+}
+DEFAULT_BG_CLASS = 6  # Usalo per i pixel non mappati
+
+
+
+
+
+
+
 COLORS = np.array([
     (128,  64,128), (244,  35,232), ( 70,  70, 70), (102,102,156), (190,153,153),
     (153,153,153), (250,170, 30), (220,220,  0), (107,142, 35), (152,251,152),
@@ -70,6 +89,12 @@ class CityscapesFineDataset(Dataset):
             # Convert label to tensor (numpy array first, then torch tensor)
             # Ensure label is long type as it contains class IDs
             lbl = torch.from_numpy(np.array(lbl)).long()
+            # Rimappa le classi a 7 macro-classi
+            lbl_7 = torch.full_like(lbl, DEFAULT_BG_CLASS)
+            for orig_id, group_id in CITYSCAPES_19_TO_7.items():
+                lbl_7[lbl == orig_id] = group_id
+            lbl = lbl_7
+
 
             if self.transform:
                 img = self.transform(img) # This applies ToTensor and Normalize to the image only
@@ -79,32 +104,6 @@ class CityscapesFineDataset(Dataset):
             print(f"Error loading image or label at index {idx}: {self.images[idx]}, {self.labels[idx]} - {e}")
             # If an error occurs, we can either skip this sample or raise an exception
             raise
-
-class CityscapesPTDataset(Dataset):
-    def __init__(self, root, split='train', device=None):
-        self.root = root
-        self.split = split
-        self.image_dir = os.path.join(root, 'images', split)
-        self.mask_dir = os.path.join(root, 'masks', split)
-
-        self.files = sorted([f for f in os.listdir(self.image_dir) if f.endswith('.pt')])
-        self.device = device  # 'cuda' o None
-
-    def __len__(self):
-        return len(self.files)
-
-    def __getitem__(self, idx):
-        image_path = os.path.join(self.image_dir, self.files[idx])
-        mask_path = os.path.join(self.mask_dir, self.files[idx])
-
-        image = torch.load(image_path).float()       # [C, H, W], float32
-        mask = torch.load(mask_path).long()          # [H, W], long
-
-        if self.device:
-            image = image.to(self.device, non_blocking=True)
-            mask = mask.to(self.device, non_blocking=True)
-
-        return image, mask
 
 class LostAndFoundDataset(Dataset):
     def __init__(self, root, split='train', transform=None, resize=(256,512)):
