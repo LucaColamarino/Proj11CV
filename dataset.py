@@ -105,3 +105,47 @@ class CityscapesPTDataset(Dataset):
             mask = mask.to(self.device, non_blocking=True)
 
         return image, mask
+
+class LostAndFoundDataset(Dataset):
+    def __init__(self, root, split='train', transform=None, resize=(256,512)):
+        self.img_dir = os.path.join(root, 'leftImg8bit', split)
+        self.label_dir = os.path.join(root, 'gtCoarse', split)
+        self.transform = transform
+        self.resize = resize
+        self.images = []
+        self.labels = []
+
+        for scene in os.listdir(self.img_dir):
+            for fn in os.listdir(os.path.join(self.img_dir, scene)):
+                if fn.endswith('_leftImg8bit.png'):
+                    self.images.append(os.path.join(self.img_dir, scene, fn))
+                    self.labels.append(
+                        os.path.join(self.label_dir, scene,
+                                     fn.replace('_leftImg8bit.png', '_gtCoarse_labelTrainIds.png'))
+                    )
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        img = Image.open(self.images[idx]).convert('RGB')
+        lbl = Image.open(self.labels[idx])
+
+        # Resize
+        img = img.resize((self.resize[1], self.resize[0]), Image.BILINEAR)
+        lbl = lbl.resize((self.resize[1], self.resize[0]), Image.NEAREST)
+
+        # Augmentations simili a Cityscapes
+        if torch.rand(1) < 0.5:
+            img = transforms.functional.hflip(img)
+            lbl = transforms.functional.hflip(lbl)
+        if torch.rand(1) < 0.5:
+            angle = (torch.rand(1) * 20 - 10).item()
+            img = transforms.functional.rotate(img, angle, fill=(0,0,0))
+            lbl = transforms.functional.rotate(lbl, angle, fill=255, interpolation=Image.NEAREST)
+
+        lbl = torch.from_numpy(np.array(lbl)).long()
+        if self.transform:
+            img = self.transform(img)
+
+        return img, lbl
