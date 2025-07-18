@@ -6,33 +6,100 @@ import numpy as np
 from torchvision import transforms
 
 PALETTE2ID = {
-    (128,  64, 128): 0, (244,  35, 232): 1, ( 70,  70,  70): 2,
-    (102, 102, 156): 3, (190, 153, 153): 4, (153, 153, 153): 5,
-    (250, 170,  30): 6, (220, 220,  0): 7, (107, 142,  35): 8,
-    (152, 251, 152): 9, ( 70, 130, 180): 10, (220,  20,  60): 11,
-    (255,   0,   0): 12, (  0,   0, 142): 13, (  0,   0,  70): 14,
-    (  0,  60, 100): 15, (  0,  80, 100): 16, (  0,   0, 230): 17,
-    (119,  11,  32): 18
+    (128,  64, 128): 0,  # road
+    (244,  35, 232): 1,  # sidewalk
+    ( 70,  70,  70): 2,  # building
+    (102, 102, 156): 3,  # wall
+    (190, 153, 153): 4,  # fence
+    (153, 153, 153): 5,  # pole
+    (250, 170,  30): 6,  # traffic light
+    (220, 220,   0): 7,  # traffic sign
+    (107, 142,  35): 8,  # vegetation
+    (152, 251, 152): 9,  # terrain
+    ( 70, 130, 180): 10, # sky
+    (220,  20,  60): 11, # person
+    (255,   0,   0): 12, # rider
+    (  0,   0, 142): 13, # car
+    (  0,   0,  70): 14, # truck
+    (  0,  60, 100): 15, # bus
+    (  0,  80, 100): 16, # train
+    (  0,   0, 230): 17, # motorcycle
+    (119,  11,  32): 18  # bicycle
 }
 
 # Mapping 19 classi Cityscapes -> 7 macro-classi
-CITYSCAPES_19_TO_7 = {
-    0: 0,   # road → road
-    1: 1, 2: 1, 3: 1,   # sidewalk, parking, rail track → flat(no road)
-    4: 2, 5: 2,         # person, rider → human
-    6: 3, 7: 3, 8: 3, 9: 3, 10: 3, 11: 3, 12: 3, 13: 3,  # vehicle group
-    14: 4, 15: 4, 16: 4, 17: 4,       # construction group
-    18: 5,  # pole → object
-    # Vegetation, terrain, sky (macro background)
-    # Aggiungi eventuali ID extra se li hai nel tuo PALETTE2ID (es. vegetation, terrain, sky)
-}
-DEFAULT_BG_CLASS = 6  # Usalo per i pixel non mappati
+CITYSCAPES_19_TO_7_MACRO = {
+    # Macro Class 0: Road
+    0: 0, # road
+    # Macro Class 1: Flat (non-road surfaces)
+    1: 1, # sidewalk
+    # Assuming parking and rail track (original IDs 2, 3) are now included in flat/non-road background.
+    # If they are, map them: 2:1, 3:1
+    # If not mapped here, they will become UNKNOWN_OBSTACLE_ID later.
+    # Macro Class 2: Human (person, rider)
+    11: 2, # person
+    12: 2, # rider
+    # Macro Class 3: Vehicle Group (car, truck, bus, train, motorcycle, bicycle)
+    13: 3, # car
+    14: 3, # truck
+    15: 3, # bus
+    16: 3, # train
+    17: 3, # motorcycle
+    18: 3, # bicycle
+    # Macro Class 4: Construction Group (building, wall, fence)
+    2: 4,  # building
+    3: 4,  # wall
+    4: 4,  # fence
+    # Macro Class 5: Objects (pole, traffic light, traffic sign)
+    5: 5,  # pole
+    6: 5,  # traffic light
+    7: 5,  # traffic sign
 
+    # Macro Class 6: Background (vegetation, terrain, sky)
+    8: 6,  # vegetation
+    9: 6,  # terrain
+    10: 6, # sky
+}
+DEFAULT_BG_CLASS = 7  # Usalo per i pixel non mappati
+
+OLD_COLORS = np.array([
+    (128,  64, 128),  # 0 road
+    (244,  35, 232),  # 1 sidewalk
+    (153, 153, 153),  # 2 building
+    (153, 153, 153),  # 3 wall
+    (153, 153, 153),  # 4 fence
+    (107, 142,  35),  # 5 pole
+    (107, 142,  35),  # 6 traffic light
+    (107, 142,  35),  # 7 traffic sign
+    (107, 142,  35),  # 8 vegetation
+    (107, 142,  35),  # 9 terrain
+    (107, 142,  35),# 10 sky
+    (220,  20,  60), # 11 person
+    (220,  20,  60),   # 12 rider
+    (  0,   0, 142), # 13 car
+    (  0,   0, 142),   # 14 truck
+    (  0,   0, 142),# 15 bus
+    (  0,   0, 142),# 16 train
+    (  0,   0, 142), # 17 motorcycle
+    (  0,   0, 142)   # 18 bicycle
+], dtype=np.uint8)
 COLORS = np.array([
-    (128,  64,128), (244,  35,232), ( 70,  70, 70), (102,102,156), (190,153,153),
-    (153,153,153), (250,170, 30), (220,220,  0), (107,142, 35), (152,251,152),
-    ( 70,130,180), (220, 20, 60), (255,  0,  0), (  0,  0,142), (  0,  0, 70),
-    (  0, 60,100), (  0, 80,100), (  0,  0,230), (119, 11, 32), (255, 255, 255) # Add white for unknown obstacles
+    # Macro Class 0: Road (e.g., Dark Purple, similar to original road)
+    (128,  64, 128),
+    # Macro Class 1: Flat (Non-Road) (e.g., Light Pink/Magenta, similar to original sidewalk)
+    (244,  35, 232),
+    # Macro Class 2: Human (e.g., Red)
+    (220,  20,  60), # Person color from original Cityscapes
+    # Macro Class 3: Vehicle Group (e.g., Dark Blue, similar to original car)
+    (  0,   0, 142),
+    # Macro Class 4: Construction Group (e.g., Brown/Gray)
+    (153, 153, 153), # Pole color, or pick a building-like color
+    # Macro Class 5: Other Objects
+    (250, 170,  30), # Traffic light color from original Cityscapes 
+    # Macro Class 6: Background (e.g., Green for vegetation/sky)
+    (107, 142,  35), # Vegetation color from original Cityscapes
+    # UNKNOWN_OBSTACLE_ID (ID 6) - White for unknown
+    (  255,   255, 255), # Blue for unknown obstacles
 ], dtype=np.uint8)
 
 
@@ -86,7 +153,7 @@ class CityscapesFineDataset(Dataset):
             lbl = torch.from_numpy(np.array(lbl)).long()
             # Rimappa le classi a 7 macro-classi
             lbl_7 = torch.full_like(lbl, DEFAULT_BG_CLASS)
-            for orig_id, group_id in CITYSCAPES_19_TO_7.items():
+            for orig_id, group_id in CITYSCAPES_19_TO_7_MACRO.items():
                 lbl_7[lbl == orig_id] = group_id
             lbl = lbl_7
 
