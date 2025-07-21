@@ -6,22 +6,22 @@ import numpy as np
 from torchvision import transforms
 
 PALETTE2ID = {
-    (128, 64, 128): 0, (244, 35, 232): 1, (70, 70, 70): 2, (102, 102, 156): 3,
-    (190, 153, 153): 4, (153, 153, 153): 5, (250, 170, 30): 6, (220, 220, 0): 7,
-    (107, 142, 35): 8, (152, 251, 152): 9, (70, 130, 180): 10, (220, 20, 60): 11,
-    (255, 0, 0): 12, (0, 0, 142): 13, (0, 0, 70): 14, (0, 60, 100): 15,
-    (0, 80, 100): 16, (0, 0, 230): 17, (119, 11, 32): 18
+    (128,  64, 128): 0, (244,  35, 232): 1, ( 70,  70,  70): 2 , (102, 102, 156): 3,
+    (190, 153, 153): 4, (153, 153, 153): 5, (250, 170,  30): 6 , (220, 220,   0): 7,
+    (107, 142,  35): 8, (152, 251, 152): 9, ( 70, 130, 180): 10, (220,  20,  60): 11,
+    (255,   0,  0): 12, (  0,  0, 142): 13, (  0,   0,  70): 14, (  0,  60, 100): 15,
+    (  0, 80, 100): 16, (  0,  0, 230): 17, (119,  11,  32): 18
 }
 
 COLORS = np.array([
-    (128, 64, 128),   # 0 - Road
-    (244, 35, 232),   # 1 - Flat
-    (220, 20, 60),    # 2 - Human
-    (0, 0, 142),      # 3 - Vehicle
-    (153, 153, 153),  # 4 - Construction
-    (250, 170, 30),   # 5 - Objects
-    (107, 142, 35),   # 6 - Vegetation
-    (255, 255, 255),  # 7 - OoD
+    (128, 64, 128),   # 0 - Road - purple
+    (244, 35, 232),   # 1 - Flat - pink
+    (220, 20, 60),    # 2 - Human - red
+    (0, 0, 142),      # 3 - Vehicle - blue
+    (153, 153, 153),  # 4 - Construction - gray
+    (250, 170, 30),   # 5 - Objects - orange
+    (107, 142, 35),   # 6 - Vegetation - green
+    (255, 255, 255),  # 7 - OoD - white
 ], dtype=np.uint8)
 
 CITYSCAPES_19_TO_7_MACRO = {
@@ -33,7 +33,7 @@ CITYSCAPES_19_TO_7_MACRO = {
     8: 6, 9: 6, 10: 6
 }
 
-DEFAULT_BG_CLASS = 7  # Unknown/void
+DEFAULT_BG_CLASS = 7
 
 def rgb_to_id(rgb_mask, palette2id, default=255):
     h, w, _ = rgb_mask.shape
@@ -94,7 +94,6 @@ class BaseSegmentationDataset(Dataset):
         else:
             img = transforms.ToTensor()(img)
         return img, lbl
-
 
 def build_mapping_array(unknown_obstacle_id=7):
     mapping_array = np.full(256, unknown_obstacle_id, dtype=np.uint8)

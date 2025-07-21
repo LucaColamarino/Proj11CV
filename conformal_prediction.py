@@ -2,6 +2,12 @@ import numpy as np
 import torch
 
 def calibrate_conformal(uos_scores_calib, alpha=0.05):
+    """
+    Calibrate the conformal prediction threshold based on the UOS scores from the calibration set.
+    :param uos_scores_calib: Array of UOS scores from the calibration set.
+    :param alpha: Significance level for the conformal prediction.  
+    :return: The calibrated threshold qhat.
+    """
     n = len(uos_scores_calib)
     qhat = np.quantile(uos_scores_calib, np.ceil((n + 1) * (1 - alpha)) / n, method='higher')
     return qhat

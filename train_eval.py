@@ -24,4 +24,4 @@ def calculate_mIoU(model, val_loader, n_classes=7):
                 hist += np.bincount(n_classes * l[mask].astype(int) + p[mask].astype(int),
                                     minlength=n_classes ** 2).reshape(n_classes, n_classes)
     iou = np.diag(hist) / (hist.sum(1) + hist.sum(0) - np.diag(hist) + 1e-6)
-    return np.nanmean(iou)
+    return np.nanmean(iou) # Return mean IoU, ignoring NaNs
