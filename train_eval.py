@@ -2,6 +2,7 @@ from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve
 import numpy as np
 import torch
 
+# Function to compute AUROC, AP, and FPR95
 def evaluate_metrics(scores, gts):
     """scores = real values [0-1], gts = 0/1"""
     auroc = roc_auc_score(gts, scores)
@@ -10,10 +11,10 @@ def evaluate_metrics(scores, gts):
     fpr95 = fpr[np.argmin(np.abs(tpr - 0.95))]
     return {"AUROC": auroc, "AP": ap, "FPR95": fpr95}
 
+# Function computes mean IoU
 def calculate_mIoU(model, val_loader, n_classes=7):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.eval()
-    ious = []
     hist = np.zeros((n_classes, n_classes))
     with torch.no_grad():
         for imgs, labels in val_loader:

@@ -13,10 +13,10 @@ class DeepLabUOS(nn.Module):
     def forward(self, x):
         eps = 1e-6
         logits = self.backbone(x)["out"]  # [B, n_classes, H, W]
-        logits_scaled = logits / 2
+        logits_scaled = logits / 2 # Scale logits to avoid instability
         probs = torch.softmax(logits_scaled, dim=1)
 
-        # Objectness = max probabilities on foreground classes (Human, Vehicle, Construction, Objects)
+        # Objectness = max probabilities on foreground classes (Human, Vehicle, Objects)
         objectness = probs[:, [2, 3, 5], :, :].max(dim=1, keepdim=True)[0]
         us = torch.exp(torch.sum(torch.log(1 - probs + eps), dim=1, keepdim=True))
         # More stable Unknown Score (log-space)
