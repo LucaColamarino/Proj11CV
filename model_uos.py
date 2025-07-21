@@ -13,7 +13,7 @@ class DeepLabUOS(nn.Module):
     def forward(self, x):
         eps = 1e-6
         logits = self.backbone(x)["out"]  # [B, n_classes, H, W]
-        logits_scaled = logits / 1.0
+        logits_scaled = logits / 2
         probs = torch.softmax(logits_scaled, dim=1)
 
         # Objectness = max probabilities on foreground classes (Human, Vehicle, Construction, Objects)
