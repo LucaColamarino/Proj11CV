@@ -12,6 +12,7 @@ PALETTE2ID = {
     (255, 0, 0): 12, (0, 0, 142): 13, (0, 0, 70): 14, (0, 60, 100): 15,
     (0, 80, 100): 16, (0, 0, 230): 17, (119, 11, 32): 18
 }
+
 COLORS = np.array([
     (128, 64, 128),   # 0 - Road
     (244, 35, 232),   # 1 - Flat
@@ -22,6 +23,7 @@ COLORS = np.array([
     (107, 142, 35),   # 6 - Vegetation
     (255, 255, 255),  # 7 - OoD
 ], dtype=np.uint8)
+
 CITYSCAPES_19_TO_7_MACRO = {
     0: 0, 1: 1,
     11: 2, 12: 2,
@@ -42,8 +44,6 @@ def rgb_to_id(rgb_mask, palette2id, default=255):
     return id_mask
 
 class BaseSegmentationDataset(Dataset):
-
-
     def __init__(self, img_dir, label_dir, mapping_array, transform=None,
                  resize=(256, 512), ood_mode=False, unknown_obstacle_id=7):
         self.img_dir, self.label_dir = img_dir, label_dir
@@ -64,14 +64,14 @@ class BaseSegmentationDataset(Dataset):
     def __len__(self): return len(self.images)
 
     def __getitem__(self, idx):
-        # ---- Caricamento immagini ----
+        # Image loading
         img = Image.open(self.images[idx]).convert('RGB')
         lbl = Image.open(self.labels[idx])
 
         img = img.resize((self.resize[1], self.resize[0]), Image.BILINEAR)
         lbl = lbl.resize((self.resize[1], self.resize[0]), Image.NEAREST)
 
-        # ---- Augmentations prima della trasformazione (su PIL) ----
+        # Augmentations before transformation
         if torch.rand(1) < 0.5:
             img = transforms.functional.hflip(img)
             lbl = transforms.functional.hflip(lbl)
@@ -80,7 +80,7 @@ class BaseSegmentationDataset(Dataset):
             img = transforms.functional.rotate(img, angle, fill=(0, 0, 0))
             lbl = transforms.functional.rotate(lbl, angle, fill=255, interpolation=Image.NEAREST)
 
-        # ---- Conversione label a macro-classi ----
+        # Label Conversion into macro-classes
         lbl_np = np.array(lbl, dtype=np.uint8)
         lbl_macro_np = self.mapping_array[lbl_np]
         
@@ -88,12 +88,11 @@ class BaseSegmentationDataset(Dataset):
             lbl_macro_np[lbl_np == 255] = self.unknown_obstacle_id
         lbl = torch.from_numpy(lbl_macro_np).long()
 
-        # ---- Trasformazione immagine in tensor ----
+        # Transforming image into tensor
         if self.transform:
             img = self.transform(img)
         else:
-            img = transforms.ToTensor()(img)  # fallback sicuro
-
+            img = transforms.ToTensor()(img)
         return img, lbl
 
 

@@ -8,23 +8,21 @@ class DeepLabUOS(nn.Module):
         base = deeplabv3_resnet50(weights=None, num_classes=n_classes)
         self.backbone = base
         self.sigmoid = nn.Sigmoid()
-        self.normalize_uos = normalize_uos  # ✅ attiva/disattiva normalizzazione
+        self.normalize_uos = normalize_uos  # enable/disable normalization
 
     def forward(self, x):
         eps = 1e-6
         logits = self.backbone(x)["out"]  # [B, n_classes, H, W]
-        logits_scaled = logits / 1.0  # T=2 entropia
+        logits_scaled = logits / 1.0
         probs = torch.softmax(logits_scaled, dim=1)
 
-
-        # ✅ Objectness = max probabilità su classi foreground (Human, Vehicle, Construction, Objects)
+        # Objectness = max probabilities on foreground classes (Human, Vehicle, Construction, Objects)
         objectness = probs[:, [2, 3, 5], :, :].max(dim=1, keepdim=True)[0]
         us = torch.exp(torch.sum(torch.log(1 - probs + eps), dim=1, keepdim=True))
-        # ✅ Unknown score più stabile (log-space)
+        # More stable Unknown Score (log-space)
         uos = objectness * us
 
-
-        # ✅ Normalizzazione opzionale 0–1 per evitare valori schiacciati
+        # Optional Normalization 0–1 to avoid compressed UOS values
         if self.normalize_uos:
             uos_min, uos_max = uos.min(dim=-1, keepdim=True)[0].min(dim=-2, keepdim=True)[0], \
                                uos.max(dim=-1, keepdim=True)[0].max(dim=-2, keepdim=True)[0]
