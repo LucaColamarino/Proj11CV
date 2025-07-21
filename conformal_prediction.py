@@ -13,7 +13,7 @@ def calibrate_conformal(uos_scores_calib, alpha=0.05):
     return qhat
 
 def conformal_mask(uos_map, qhat):
-    return (uos_map >= qhat).int()
+    return (uos_map >= qhat)
 
 def extract_uos_scores_for_calibration(model, loader):
     model.eval()
