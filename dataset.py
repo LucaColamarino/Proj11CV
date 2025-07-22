@@ -46,10 +46,10 @@ class BaseSegmentationDataset(Dataset):
         self.transform, self.resize = transform, resize
         self.ood_mode, self.unknown_obstacle_id = ood_mode, unknown_obstacle_id
         
-
         self.mapping_array = mapping_array
         self.images, self.labels = [], []
 
+        # Load images and labels from directories
         for scene in os.listdir(img_dir):
             for fn in os.listdir(os.path.join(img_dir, scene)):
                 if fn.endswith('_leftImg8bit.png'):
