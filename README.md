@@ -55,6 +55,7 @@ The project expects the **Cityscapes/Lost and Found** structure:
 dataset/
 ├── leftImg8bit/train/<city>/*.png
 └── gtFine(gtCoarse)/train/<city>/*_labelTrainIds.png
+```
 
 In order to set it up, you need to :
     Download Cityscapes dataset from https://www.cityscapes-dataset.com/downloads/ (download gtFine_trainvaltest.zip (241MB) [md5] and leftImg8bit_trainvaltest.zip (11GB) [md5])
@@ -66,7 +67,6 @@ python .\OLD\cityscapesscripts\preparation\createTrainIdLabelImgs.py
 
 Eventually adjust the CITYSCAPES_ROOT and LOSTANDFOUND_ROOT in the **Globals** section of the notebook *main.ipynb*
 
-```
 
 ### Macro-Class Mapping
 The 19 Cityscapes labels are mapped to 7 macro-classes:
