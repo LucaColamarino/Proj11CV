@@ -49,10 +49,10 @@ pip install -r requirements.txt
 
 ## Dataset Setup
 
-The project expects the **Cityscapes/Lost and Found** structure:
+The project expects the **Cityscapes(LostandFound)** structure:
 
 ```
-dataset/
+dataset_folder/
 ├── leftImg8bit/train/<city>/*.png
 └── gtFine(gtCoarse)/train/<city>/*_labelTrainIds.png
 ```
