@@ -14,12 +14,3 @@ def calibrate_conformal(uos_scores_calib, alpha=0.05):
 
 def conformal_mask(uos_map, qhat):
     return (uos_map >= qhat)
-
-def extract_uos_scores_for_calibration(model, loader):
-    model.eval()
-    scores = []
-    with torch.no_grad():
-        for imgs, _ in loader:
-            out = model(imgs.cuda())["uos"]
-            scores.append(out.flatten().cpu().numpy())
-    return np.concatenate(scores)
